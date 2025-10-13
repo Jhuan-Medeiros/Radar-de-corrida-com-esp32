@@ -8,23 +8,25 @@ const int botaoA = 16;
 const int botaoB = 17;
 
 // Define portas das luzes
-// const int verde = 5;
-// const int amarelo = 18;
-// const int vermelho = 19;
+const int verde = 25;
+const int amarelo = 26;
+const int vermelho = 27;
 
 // Define as portas do analogico
 
-const int eixoY = 15;
-const int eixoX = 4;
+const int eixoY = 4;
+const int eixoX = 15;
 const int clickAnal = 5;
 
 // Variáveis antibugs
 
-bool mudancaAnalX = false;
+bool moverJoy = false;
 bool mudancaTela = false;
 
 int opcaoSelecionada = 0;
 const int totalItens = 3;
+
+bool sequenciaAtiva = false;
 
 // As definições de pinos agora são feitas no arquivo User_Setup.h da biblioteca TFT_eSPI
 
@@ -35,73 +37,72 @@ TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite telaBuffer = TFT_eSprite(&tft);
 
 // Define os tempos para ser utilizado o Millis()
-// unsigned long tempoVermelho = 3000;
-// unsigned long tempoVerde = 4000;
-// unsigned long tempoAmarelo = 2000;
+unsigned long tempoVermelho = 3000;
+unsigned long tempoVerde = 4000;
+unsigned long tempoAmarelo = 2000;
 
-// bool cliqueInicio = false;
-// unsigned long tempoDeInicio = 0;
-// int estadoAtual = 0;
+bool cliqueInicio = false;
+unsigned long tempoDeInicio = 0;
+int estadoAtual = 0;
 
-// void partidaContador()
-// {
-//   switch (estadoAtual)
-//   {
-//   case 0:
-//     if (digitalRead(partida) == LOW && !cliqueInicio)
-//     {
-//       cliqueInicio = true;
-//       digitalWrite(vermelho, HIGH);
-//       digitalWrite(amarelo, LOW);
-//       digitalWrite(verde, LOW);
+void partidaContador()
+{
+  if (!sequenciaAtiva)
+    return;
 
-//       tempoDeInicio = millis();
-//       estadoAtual = 1;
-//     }
-//     if (digitalRead(partida) == HIGH)
-//     {
-//       cliqueInicio = false;
-//     }
-//     break;
+  switch (estadoAtual)
+  {
+  case 0:
+    digitalWrite(vermelho, HIGH);
+    digitalWrite(amarelo, LOW);
+    digitalWrite(verde, LOW);
+    tempoDeInicio = millis();
+    estadoAtual = 1;
+    if (digitalRead(botaoA) == HIGH)
+    {
+      cliqueInicio = false;
+    }
+    break;
 
-//   case 1:
-//     if (millis() - tempoDeInicio >= tempoVermelho)
-//     {
-//       digitalWrite(vermelho, HIGH);
-//       digitalWrite(amarelo, HIGH);
-//       digitalWrite(verde, LOW);
-//       tempoDeInicio = millis();
-//       estadoAtual = 2;
-//     }
-//     break;
-//   case 2:
-//     if (millis() - tempoDeInicio >= tempoAmarelo)
-//     {
-//       digitalWrite(vermelho, LOW);
-//       digitalWrite(amarelo, LOW);
-//       digitalWrite(verde, HIGH);
-//       tempoDeInicio = millis();
-//       estadoAtual = 3;
-//     }
-//     break;
-//   case 3:
-//     if (millis() - tempoDeInicio >= tempoVerde)
-//     {
-//       digitalWrite(vermelho, LOW);
-//       digitalWrite(amarelo, LOW);
-//       digitalWrite(verde, LOW);
-//       estadoAtual = 0;
-//     }
-//     break;
-//   }
-// }
+  case 1:
+    if (millis() - tempoDeInicio >= tempoVermelho)
+    {
+      digitalWrite(vermelho, HIGH);
+      digitalWrite(amarelo, HIGH);
+      digitalWrite(verde, LOW);
+      tempoDeInicio = millis();
+      estadoAtual = 2;
+    }
+    break;
+  case 2:
+    if (millis() - tempoDeInicio >= tempoAmarelo)
+    {
+      digitalWrite(vermelho, LOW);
+      digitalWrite(amarelo, LOW);
+      digitalWrite(verde, HIGH);
+      tempoDeInicio = millis();
+      estadoAtual = 3;
+    }
+    break;
+  case 3:
+    if (millis() - tempoDeInicio >= tempoVerde)
+    {
+      digitalWrite(vermelho, LOW);
+      digitalWrite(amarelo, LOW);
+      digitalWrite(verde, LOW);
+      estadoAtual = 0;
+      sequenciaAtiva = false;
+    }
+    break;
+  }
+}
 
 void trocaDeItem()
 {
   // Define as dimensões da tela/imagem
   int w = 160;
   int h = 128;
-  const char *menuItens[] = {"Iniciar", "Mais procurado", "Configuracao"};
+  const char *menuItens[] = {"Iniciar", "Mais procurado", "Config"};
 
   // Limpa o buffer com a cor preta. Todas as operações de desenho
   // a seguir ocorrerão na memória RAM, não no display físico.
@@ -146,19 +147,30 @@ void trocaDeItem()
   mudancaTela = false;
 }
 
+void telaConfig(){
+  int w = 160;
+  int h = 128;
+
+  telaBuffer.fillSprite(TFT_BLACK);
+
+  telaBuffer.pushImage(0, 0, w, h, desenho);
+  telaBuffer.pushSprite(0, 0);
+}
+
 void setup()
 {
   Serial.begin(9600);
 
   // // Define os pinos das luzes
 
-  // // pinMode(verde, OUTPUT);
-  // // pinMode(amarelo, OUTPUT);
-  // // pinMode(vermelho, OUTPUT);
+  pinMode(verde, OUTPUT);
+  pinMode(amarelo, OUTPUT);
+  pinMode(vermelho, OUTPUT);
 
   // // define pinos dos botões
 
-  // // pinMode(partida, INPUT_PULLUP);
+  pinMode(botaoA, INPUT_PULLUP);
+  pinMode(botaoB, INPUT_PULLUP);
 
   // Define pinos do analogico
 
@@ -173,7 +185,7 @@ void setup()
 
   // Cria o espaço na memória RAM para o nosso buffer
   // Deve corresponder às dimensões da tela após a rotação
-  telaBuffer.setColorDepth(16);      // 16-bit para cores (RGB565)
+  telaBuffer.setColorDepth(8);      // 16-bit para cores (RGB565)
   telaBuffer.createSprite(160, 128); // Largura, Altura
 
   // Limpa a tela física uma vez no início para remover qualquer lixo da inicialização
@@ -186,6 +198,8 @@ void loop()
 {
   int leitorEixoX = analogRead(eixoY);
   int leitorEixoY = analogRead(eixoX);
+  int leituraBotaoA = digitalRead(botaoA);
+  int leituraBotaoB = digitalRead(botaoB);
 
   if (leitorEixoX >= 4000)
   {
@@ -193,37 +207,52 @@ void loop()
   else if (leitorEixoX <= 500)
   {
   }
-
-  if (leitorEixoY >= 4000 && !mudancaAnalX)
+  if (!sequenciaAtiva)
   {
-    opcaoSelecionada ++;
-    if (opcaoSelecionada >= totalItens)
-    {
-      opcaoSelecionada = totalItens -1;
-    }
-    mudancaAnalX = true;
-    mudancaTela = true;
+    
+      if (leitorEixoY >= 4000 && !moverJoy)
+      {
+        opcaoSelecionada++;
+        if (opcaoSelecionada >= totalItens)
+        {
+          opcaoSelecionada = totalItens - 1;
+        }
+        moverJoy = true;
+        mudancaTela = true;
+      }
+      // Pra cima
+      else if (leitorEixoY <= 500 && !moverJoy)
+      {
+        opcaoSelecionada = opcaoSelecionada - 1;
+        if (opcaoSelecionada < 0)
+        {
+          opcaoSelecionada = 0;
+        }
+        mudancaTela = true;
+        moverJoy = true;
+      }
+      else if(leitorEixoY > 1000 && leitorEixoY < 4000){
+        moverJoy = false;
+      }
   }
-  else if (leitorEixoY <= 500 && !mudancaAnalX)
+
+  if (opcaoSelecionada == 0 && leituraBotaoA == LOW && !sequenciaAtiva)
   {
-    opcaoSelecionada = opcaoSelecionada -1;
-    if (opcaoSelecionada < 0)
-    {
-      opcaoSelecionada = 0;
-    }
-    mudancaAnalX = true;
-    mudancaTela = true;
+    sequenciaAtiva = true;
+    estadoAtual = 0;
+  } else if(opcaoSelecionada ==2 && leituraBotaoA == LOW){
+    telaConfig();
   }
-  else if (leitorEixoY < 3500 && leitorEixoY > 600)
+
+  if (sequenciaAtiva)
   {
-    mudancaAnalX = false;
+    partidaContador();
   }
 
-  Serial.println(leitorEixoY);
+  if (mudancaTela)
+  {
+    trocaDeItem();
+  }
 
-  // partidaContador();
-  // Serial.println(digitalRead(partida));
-
-  trocaDeItem();
-
+  Serial.println(moverJoy);
 }
