@@ -112,8 +112,8 @@ bool botaoADeb = HIGH;
 bool botaoBDeb = HIGH;
 
 // Debounce do sensor
-bool carroPassa1 = HIGH;
-bool carroPassa2 = HIGH;
+bool carroPassa1 = LOW;
+bool carroPassa2 = LOW;
 
 // ========== FUNÇÕES DE GERENCIAMENTO DE RANKING ==========
 
@@ -569,8 +569,8 @@ void setup()
   pinMode(amarelo, OUTPUT);
   pinMode(vermelho, OUTPUT);
 
-  pinMode(sensor1, INPUT_PULLUP);
-  pinMode(sensor2, INPUT_PULLUP);
+  pinMode(sensor1, INPUT);
+  pinMode(sensor2, INPUT);
 
   pinMode(botaoA, INPUT_PULLUP);
   pinMode(botaoB, INPUT_PULLUP);
@@ -597,6 +597,8 @@ void setup()
 
   delay(100);
   primeiraLeitura = false;
+  carroPassa1 = digitalRead(sensor1);
+  carroPassa2 = digitalRead(sensor2);
 }
 
 void loop()
