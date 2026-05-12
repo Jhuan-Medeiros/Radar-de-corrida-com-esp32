@@ -446,7 +446,7 @@ void partidaContador()
     digitalWrite(vermelho, HIGH);
     digitalWrite(amarelo, LOW);
     digitalWrite(verde, LOW);
-    telaBuffer.fillSprite(TFT_BLUE);
+    telaBuffer.fillSprite(TFT_RED);
     telaBuffer.pushSprite(0, 0);
     somTrocaCor();
     tempoDeInicio = millis();
@@ -459,7 +459,7 @@ void partidaContador()
       digitalWrite(vermelho, HIGH);
       digitalWrite(amarelo, HIGH);
       digitalWrite(verde, LOW);
-      telaBuffer.fillSprite(TFT_CYAN);
+      telaBuffer.fillSprite(TFT_YELLOW);
       telaBuffer.pushSprite(0, 0);
       somTrocaCor();
       tempoDeInicio = millis();
@@ -584,7 +584,7 @@ void setup()
   noTone(buzzer);
 
   tft.init();
-  tft.setRotation(5);
+  tft.setRotation(3);
 
   telaBuffer.setColorDepth(8);
   telaBuffer.createSprite(160, 128);
