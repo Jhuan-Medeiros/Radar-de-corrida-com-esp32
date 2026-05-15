@@ -204,51 +204,107 @@ void corrida()
     voltas++;
     mudancaTela = true;
     tempoUltimaVolta = millis() - tempoVoltaAtual;
-    velocidadeMedia = 30 / (tempoUltimaVolta / 1000.0);
-    
-    if (tempoMelhorVolta == 0)
+
+    if (tempoMelhorVolta == 0 || tempoUltimaVolta < tempoMelhorVolta)
     {
       tempoMelhorVolta = tempoUltimaVolta;
     }
-    else if (tempoMelhorVolta > tempoUltimaVolta)
-    {
-      tempoMelhorVolta = tempoUltimaVolta;
-    }
-    
+
     if (tempoUltimaVolta > 0)
     {
-      velocidadeMedia = 30 / (tempoUltimaVolta / 1000.0);
+      velocidadeMedia = 30.0 / (tempoUltimaVolta / 1000.0);
     }
     else
     {
       velocidadeMedia = 0.0f;
     }
-    
-    // Verifica se entra no ranking
+
     posicaoNovoRecorde = verificaNovoRecorde(tempoMelhorVolta);
   }
 
   telaBuffer.fillSprite(TFT_BLACK);
-  telaBuffer.setCursor(5, 10);
-  telaBuffer.setTextSize(2);
-  telaBuffer.print("VOLTA ");
-  telaBuffer.print(voltas);
-  telaBuffer.setCursor(5, 70);
+
+  int cx = 80;
+  int cy = 70;
+  int r = 50;
+
+  telaBuffer.drawRoundRect(2, 2, 156, 124, 5, TFT_DARKGREY);
+
+  telaBuffer.fillRoundRect(5, 5, 45, 20, 3, TFT_DARKGREY);
+  telaBuffer.setCursor(8, 11);
+  telaBuffer.setTextColor(TFT_WHITE);
   telaBuffer.setTextSize(1);
-  telaBuffer.print("Volta atual: ");
-  telaBuffer.print(tempoUltimaVolta / 1000.0);
-  telaBuffer.setCursor(5, 80);
-  telaBuffer.print("Melhor volta: ");
-  telaBuffer.print(tempoMelhorVolta / 1000.0);
-  telaBuffer.setCursor(5, 90);
-  telaBuffer.print("Velocidade: ");
-  telaBuffer.print(velocidadeMedia);
+  telaBuffer.print("V:");
+  telaBuffer.setTextColor(TFT_YELLOW);
+  telaBuffer.print(voltas);
+
+  for (int i = 0; i <= 180; i += 18) {
+    float ang = i * PI / 180.0;
+    int x1 = cx - r * cos(ang); 
+    int y1 = cy - r * sin(ang);
+    
+    int tamTraco = (i % 36 == 0) ? 8 : 4;
+    int x2 = cx - (r - tamTraco) * cos(ang);
+    int y2 = cy - (r - tamTraco) * sin(ang);
+    
+    uint16_t corMarca = TFT_WHITE;
+    if (i >= 126) corMarca = TFT_RED;
+    else if (i >= 90) corMarca = TFT_YELLOW;
+
+    telaBuffer.drawLine(x1, y1, x2, y2, corMarca);
+  }
+
+  telaBuffer.setCursor(cx - 12, cy - 35);
+  telaBuffer.setTextColor(TFT_LIGHTGREY);
+  telaBuffer.setTextSize(1);
   telaBuffer.print("cm/s");
+
+  float velMax = 150.0; 
+  float velDisplay = velocidadeMedia;
+  if (velDisplay > velMax) velDisplay = velMax;
+  
+  float angPonteiro = (velDisplay / velMax) * 180.0;
+  float radPonteiro = angPonteiro * PI / 180.0;
+  
+  int nx = cx - (r - 10) * cos(radPonteiro);
+  int ny = cy - (r - 10) * sin(radPonteiro);
+
+  telaBuffer.drawLine(cx, cy, nx, ny, TFT_RED);
+  telaBuffer.drawLine(cx - 1, cy, nx, ny, TFT_RED); 
+  telaBuffer.drawLine(cx + 1, cy, nx, ny, TFT_RED);
+  telaBuffer.fillCircle(cx, cy, 4, TFT_DARKGREY);
+  telaBuffer.drawCircle(cx, cy, 4, TFT_RED);
+
+  telaBuffer.fillRect(cx - 22, cy + 8, 44, 16, TFT_BLACK);
+  telaBuffer.drawRect(cx - 22, cy + 8, 44, 16, TFT_DARKGREY);
+  
+  int posX = (velocidadeMedia >= 100) ? cx - 18 : cx - 15;
+  telaBuffer.setCursor(posX, cy + 12);
+  telaBuffer.setTextColor(TFT_CYAN);
+  telaBuffer.setTextSize(1);
+  telaBuffer.print(velocidadeMedia, 1);
+
+  telaBuffer.drawFastHLine(10, 95, 140, TFT_DARKGREY);
+  
+  telaBuffer.setTextSize(1);
+  telaBuffer.setCursor(10, 100);
+  telaBuffer.setTextColor(TFT_WHITE);
+  telaBuffer.print("Volta atual: ");
+  telaBuffer.print(tempoUltimaVolta / 1000.0, 2);
+  telaBuffer.print("s");
+
+  telaBuffer.setCursor(10, 112);
+  telaBuffer.setTextColor(TFT_GREEN);
+  telaBuffer.print("Melhor volta: ");
+  telaBuffer.print(tempoMelhorVolta / 1000.0, 2);
+  telaBuffer.print("s");
+
   telaBuffer.pushSprite(0, 0);
 
   carroPassa1 = leitorSensor1;
   carroPassa2 = leitorSensor2;
 }
+
 
 void procurado() {
   int w = 160;
